@@ -68,13 +68,14 @@
     </div>
 
     <div id="toolbar" class="toolbar">
-        <button>Continuar g</button>
+        <button>Continuar 1</button>
     </div>
 
     <script>
-        let isKeyboardOpen = false;
-let lastViewportHeight = window.visualViewport?.height || window.innerHeight;
-let toolbar = document.getElementById('toolbar');
+        let toolbar = document.getElementById('toolbar');
+
+// Detectar soporte de virtualKeyboard
+const supportsVirtualKeyboard = "virtualKeyboard" in navigator;
 
 function updateToolbarPosition() {
     if (!toolbar || !window.visualViewport) return;
@@ -82,60 +83,43 @@ function updateToolbarPosition() {
     const viewportHeight = window.visualViewport.height;
     const viewportOffsetTop = window.visualViewport.offsetTop;
 
-    // Detectar si el teclado está abierto
-    if (viewportHeight < window.innerHeight) {
+    // Detectar si el teclado está abierto usando visualViewport
+    const keyboardIsOpen = viewportHeight < window.innerHeight;
+
+    if (keyboardIsOpen) {
+        // Ajustar el toolbar cuando el teclado está abierto
         const bottom = Math.max(0, window.innerHeight - (viewportOffsetTop + viewportHeight));
         toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-        isKeyboardOpen = true;
     } else {
-        // Restablecer la posición cuando el teclado está cerrado
+        // Restaurar la posición del toolbar
         toolbar.style.transform = 'translate3d(0, 0, 0)';
-        isKeyboardOpen = false;
     }
 }
 
-function handleScroll() {
-    if (!toolbar || isKeyboardOpen) return; // Ignorar si el teclado está activo
-
-    // Si el teclado está cerrado, el toolbar puede reaccionar al scroll
-    const currentScrollY = window.scrollY;
-
-    // Mostrar/ocultar el toolbar basado en la dirección del scroll
-    if (currentScrollY > lastViewportHeight) {
-        toolbar.style.transform = `translate3d(0, 100%, 0)`; // Ocultar toolbar
-    } else {
-        toolbar.style.transform = `translate3d(0, 0, 0)`; // Mostrar toolbar
-    }
-
-    lastViewportHeight = currentScrollY;
-}
-
-function handleInputFocus() {
-    if (!toolbar || !window.visualViewport) return;
-
-    const viewportHeight = window.visualViewport.height;
-
-    // Recalcular posición del toolbar al enfocar un input
-    if (viewportHeight < window.innerHeight) {
-        const bottom = Math.max(0, window.innerHeight - (window.visualViewport.offsetTop + viewportHeight));
-        toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+function enableVirtualKeyboardOverlay() {
+    // Habilitar overlay para el teclado virtual si es compatible
+    if (supportsVirtualKeyboard) {
+        navigator.virtualKeyboard.overlaysContent = true;
     }
 }
 
-// Agregar eventos
+// Detectar eventos de resize para actualizar la posición del toolbar
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateToolbarPosition);
-    document.addEventListener('focusin', handleInputFocus); // Detectar foco en inputs
-    document.addEventListener('scroll', handleScroll, { passive: true });
 }
 
-// Limpiar eventos al salir
+// Habilitar el overlay del teclado virtual al cargar la página
+enableVirtualKeyboardOverlay();
+
+// Manejar cambios de foco en inputs para estabilizar el comportamiento
+document.addEventListener('focusin', updateToolbarPosition);
+
+// Limpieza de eventos
 window.addEventListener('beforeunload', () => {
     if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateToolbarPosition);
     }
-    document.removeEventListener('focusin', handleInputFocus);
-    document.removeEventListener('scroll', handleScroll);
+    document.removeEventListener('focusin', updateToolbarPosition);
 });
 
     </script>
