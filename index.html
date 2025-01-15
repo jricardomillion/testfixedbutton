@@ -60,6 +60,15 @@ input {
   height: var(--size);
 }
 
+input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
 .post-comments {
   flex: 1;
   overflow-y-: auto;
@@ -138,10 +147,14 @@ input {
               </svg>
             </p>
           </header>
-          <div class="post-content">
-            <img src="https://assets.codepen.io/182774/defensive-css-paris-web.jpeg" alt="" />
-            <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nostrum adipisci deleniti vero odio. Quibusdam maxime quos mollitia architecto? Vero harum animi hic similique eaque eos ex ipsa eligendi aliquid quia!</p>
-          </div>
+          <div class="content">
+            <input type="text" placeholder="Nombre">
+            <input type="email" placeholder="Email">
+            <input type="tel" placeholder="Teléfono">
+            <input type="number" placeholder="Número">
+            <input type="text" placeholder="Campo extra 1">
+            <input type="text" placeholder="Campo extra 2">
+        </div>
           <hr>
           <div class="post-comments">
             <div class="comment">
