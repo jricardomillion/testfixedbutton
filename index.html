@@ -35,7 +35,8 @@
             background: white;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            transform: translateZ(0);
+            transform: translate3d(0,0,0);
+            will-change: transform;
         }
 
         .toolbar button {
@@ -51,7 +52,7 @@
 </head>
 <body>
     <div class="content">
-        <input type="text" placeholder="Nombre">
+        <input type="text" placeholder="Nombre 2">
         <input type="email" placeholder="Email">
         <input type="tel" placeholder="Teléfono">
         <input type="number" placeholder="Número">
@@ -65,6 +66,7 @@
 
     <script>
         let isKeyboardOpen = false;
+        let lastKeyboardHeight = 0;
 
         function updateToolbarPosition() {
             const toolbar = document.getElementById('toolbar');
@@ -72,25 +74,26 @@
 
             const viewportHeight = window.visualViewport.height;
             const windowHeight = window.innerHeight;
+            const keyboardHeight = windowHeight - viewportHeight;
 
-            // Solo actuamos cuando cambia el estado del teclado (abierto/cerrado)
-            const isKeyboardVisible = viewportHeight < windowHeight;
-
-            if (isKeyboardVisible !== isKeyboardOpen) {
-                isKeyboardOpen = isKeyboardVisible;
-                
-                if (isKeyboardVisible) {
+            // Solo actualizar si la altura del teclado cambió significativamente
+            if (Math.abs(keyboardHeight - lastKeyboardHeight) > 1) {
+                if (viewportHeight < windowHeight) {
                     const bottom = windowHeight - (window.visualViewport.offsetTop + viewportHeight);
-                    toolbar.style.bottom = `${bottom}px`;
+                    toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+                    isKeyboardOpen = true;
                 } else {
-                    toolbar.style.bottom = '0';
+                    toolbar.style.transform = 'translate3d(0, 0, 0)';
+                    isKeyboardOpen = false;
                 }
+                lastKeyboardHeight = keyboardHeight;
             }
         }
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', updateToolbarPosition);
+                window.visualViewport.addEventListener('scroll', updateToolbarPosition);
             }
         }
     </script>
