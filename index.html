@@ -65,7 +65,7 @@
     </div>
 
     <script>
-        let isKeyboardOpen = false;
+        let lastViewportHeight = window.visualViewport?.height || window.innerHeight;
         let rafId = null;
 
         function updateToolbarPosition() {
@@ -77,26 +77,28 @@
                 const toolbar = document.getElementById('toolbar');
                 if (!toolbar || !window.visualViewport) return;
 
-                const viewportHeight = window.visualViewport.height;
-                const viewportOffsetTop = window.visualViewport.offsetTop;
+                const currentViewportHeight = window.visualViewport.height;
 
-                if (viewportHeight < window.innerHeight) {
-                    // Teclado abierto
-                    const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
-                    toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-                    isKeyboardOpen = true;
-                } else {
-                    // Teclado cerrado
-                    toolbar.style.transform = 'translate3d(0, 0, 0)';
-                    isKeyboardOpen = false;
+                // Solo actualizar si la altura del viewport realmente cambió
+                if (Math.abs(currentViewportHeight - lastViewportHeight) > 1) {
+                    const viewportOffsetTop = window.visualViewport.offsetTop;
+
+                    if (currentViewportHeight < window.innerHeight) {
+                        const bottom = window.innerHeight - (viewportOffsetTop + currentViewportHeight);
+                        toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+                    } else {
+                        toolbar.style.transform = 'translate3d(0, 0, 0)';
+                    }
+
+                    lastViewportHeight = currentViewportHeight;
                 }
             });
         }
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             if (window.visualViewport) {
+                // Solo escuchamos resize ya que es el que indica cambios reales en el teclado
                 window.visualViewport.addEventListener('resize', updateToolbarPosition);
-                window.visualViewport.addEventListener('scroll', updateToolbarPosition);
             }
         }
     </script>
