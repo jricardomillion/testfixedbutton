@@ -39,6 +39,11 @@
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+
+            transform: translate3d(0,0,0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .toolbar button {
@@ -67,8 +72,31 @@
     </div>
 
     <script>
-         if ("virtualKeyboard" in navigator) {
+        if ("virtualKeyboard" in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
+        } else if (window.visualViewport) {
+            // Fallback para navegadores más antiguos
+            let rafId = null;
+            let initialViewportHeight = window.visualViewport.height;
+    
+            function updateToolbarPosition() {
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                }
+    
+                rafId = requestAnimationFrame(() => {
+                    const toolbar = document.getElementById('toolbar');
+                    if (!toolbar || !window.visualViewport) return;
+    
+                    const viewportHeight = window.visualViewport.height;
+                    if (Math.abs(viewportHeight - initialViewportHeight) > 50) {
+                        const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
+                        toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+                    }
+                });
+            }
+    
+            window.visualViewport.addEventListener('resize', updateToolbarPosition);
         }
     </script>
 </body>
