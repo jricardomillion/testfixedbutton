@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Keyboard Toolbar Test</title>
+    <title>Fixed Toolbar Test</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             min-height: 100vh;
             padding: 20px;
             padding-bottom: 80px;
-            overscroll-behavior: none; /* Prevenir bounce scroll */
         }
 
         input {
@@ -30,18 +28,22 @@
 
         .toolbar {
             position: fixed;
-            bottom: 0;
+            bottom: max(0px, env(keyboard-inset-height, 0px));
             left: 0;
             width: 100%;
             padding: 16px;
             background: white;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            transform: translate3d(0,0,0); /* Mejor rendimiento GPU */
+            transform: translate3d(0,0,0);
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            transition: transform 0.1s ease-out; /* Transición suave pero rápida */
+
+            transform: translate3d(0,0,0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .toolbar button {
@@ -53,97 +55,87 @@
             border-radius: 4px;
             font-size: 16px;
         }
-
-        /* Prevenir scroll bounce en iOS */
-        html {
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        p {
-            margin-bottom: 1rem;
-        }
     </style>
 </head>
 <body>
     <div class="content">
-        <h2>Test Form</h2>
         <input type="text" placeholder="Nombre">
         <input type="email" placeholder="Email">
         <input type="tel" placeholder="Teléfono">
-        <input type="text" placeholder="Dirección">
-        <input type="text" placeholder="Ciudad">
+        <input type="number" placeholder="Número">
         <input type="text" placeholder="Campo extra 1">
         <input type="text" placeholder="Campo extra 2">
     </div>
 
-    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-
-    <div class="toolbar" id="toolbar">
-        <button>Continuar</button>
+    <div id="toolbar" class="toolbar">
+        <button>Continuar g</button>
     </div>
 
     <script>
         let isKeyboardOpen = false;
         let lastViewportHeight = window.visualViewport?.height || window.innerHeight;
-        let lastOffsetTop = 0;
-        let rafId = null;
+        let lastScrollY = window.scrollY;
+        let isThrottling = false;
 
         function updateToolbarPosition() {
-            if (rafId) {
-                cancelAnimationFrame(rafId);
+            const toolbar = document.getElementById('toolbar');
+            if (!toolbar || !window.visualViewport) return;
+
+            const viewportHeight = window.visualViewport.height;
+            const viewportOffsetTop = window.visualViewport.offsetTop;
+
+            if (viewportHeight < window.innerHeight) {
+                // Cuando el teclado está abierto
+                const bottom = Math.max(0, window.innerHeight - (viewportOffsetTop + viewportHeight));
+                toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+                isKeyboardOpen = true;
+            } else {
+                // Cuando el teclado está cerrado
+                toolbar.style.transform = 'translate3d(0, 0, 0)';
+                isKeyboardOpen = false;
             }
+        }
 
-            rafId = requestAnimationFrame(() => {
-                const toolbar = document.getElementById('toolbar');
-                if (!toolbar || !window.visualViewport) return;
+        function handleScroll() {
+            if (isKeyboardOpen) return; // No manejar scroll si el teclado está abierto
 
-                const viewportHeight = window.visualViewport.height;
-                const viewportOffsetTop = window.visualViewport.offsetTop;
+            const toolbar = document.getElementById('toolbar');
+            if (!toolbar) return;
 
-                // Solo actualizar si hay un cambio significativo
-                if (Math.abs(viewportHeight - lastViewportHeight) > 1 || 
-                    Math.abs(viewportOffsetTop - lastOffsetTop) > 1) {
-                    
-                    if (viewportHeight < window.innerHeight) {
-                        const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
-                        toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-                        isKeyboardOpen = true;
+            if (!isThrottling) {
+                isThrottling = true;
+
+                requestAnimationFrame(() => {
+                    const currentScrollY = window.scrollY;
+
+                    // Si el usuario está desplazándose hacia abajo, oculta el toolbar
+                    if (currentScrollY > lastScrollY) {
+                        toolbar.style.transform = `translate3d(0, 100%, 0)`;
                     } else {
-                        toolbar.style.transform = 'translate3d(0, 0, 0)';
-                        isKeyboardOpen = false;
+                        toolbar.style.transform = `translate3d(0, 0, 0)`;
                     }
 
-                    lastViewportHeight = viewportHeight;
-                    lastOffsetTop = viewportOffsetTop;
-                }
-            });
-        }
-
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            if (window.visualViewport) {
-                // Throttle los eventos para mayor estabilidad
-                let throttleTimeout;
-                
-                const throttledUpdate = () => {
-                    if (!throttleTimeout) {
-                        throttleTimeout = setTimeout(() => {
-                            updateToolbarPosition();
-                            throttleTimeout = null;
-                        }, 16); // Aproximadamente 60fps
-                    }
-                };
-
-                window.visualViewport.addEventListener('resize', updateToolbarPosition);
-                window.visualViewport.addEventListener('scroll', throttledUpdate);
-                
-                // Manejar scroll con throttling
-                document.addEventListener('scroll', throttledUpdate, { passive: true });
+                    lastScrollY = currentScrollY;
+                    isThrottling = false;
+                });
             }
         }
+
+        if (window.visualViewport) {
+            // Escucha eventos de resize para manejar teclado
+            window.visualViewport.addEventListener('resize', updateToolbarPosition);
+
+            // Escucha eventos de scroll para ocultar/mostrar el toolbar
+            document.addEventListener('scroll', handleScroll, { passive: true });
+        }
+
+        // Limpia los eventos al salir
+        window.addEventListener('beforeunload', () => {
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', updateToolbarPosition);
+            }
+            document.removeEventListener('scroll', handleScroll);
+        });
     </script>
 </body>
 </html>
