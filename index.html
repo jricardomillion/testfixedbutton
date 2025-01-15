@@ -26,24 +26,33 @@
             font-size: 16px;
         }
 
+        /* Estilo base del toolbar */
         .toolbar {
             position: fixed;
-            bottom: max(0px, env(keyboard-inset-height, 0px));
-            left: 0;
             width: 100%;
             padding: 16px;
             background: white;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            transform: translate3d(0,0,0);
             will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+            transform: translate3d(0,0,0);
+        }
 
-            transform: translate3d(0,0,0);
-            will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+        /* Estilos específicos para Android */
+        @supports (bottom: env(keyboard-inset-height)) {
+            .toolbar {
+                bottom: max(0px, env(keyboard-inset-height, 0px));
+                left: 0;
+            }
+        }
+
+        /* Estilos específicos para iOS */
+        @supports (-webkit-touch-callout: none) {
+            .toolbar {
+                bottom: 0;
+                left: 0;
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+            }
         }
 
         .toolbar button {
@@ -72,31 +81,21 @@
     </div>
 
     <script>
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        
         if ("virtualKeyboard" in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
-        } else if (window.visualViewport) {
-            // Fallback para navegadores más antiguos
-            let rafId = null;
-            let initialViewportHeight = window.visualViewport.height;
-    
-            function updateToolbarPosition() {
-                if (rafId) {
-                    cancelAnimationFrame(rafId);
+        } else if (isIOS && window.visualViewport) {
+            const toolbar = document.getElementById('toolbar');
+            let lastHeight = window.visualViewport.height;
+
+            window.visualViewport.addEventListener('resize', () => {
+                if (window.visualViewport.height !== lastHeight) {
+                    const bottom = window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop);
+                    toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
+                    lastHeight = window.visualViewport.height;
                 }
-    
-                rafId = requestAnimationFrame(() => {
-                    const toolbar = document.getElementById('toolbar');
-                    if (!toolbar || !window.visualViewport) return;
-    
-                    const viewportHeight = window.visualViewport.height;
-                    if (Math.abs(viewportHeight - initialViewportHeight) > 50) {
-                        const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
-                        toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-                    }
-                });
-            }
-    
-            window.visualViewport.addEventListener('resize', updateToolbarPosition);
+            });
         }
     </script>
 </body>
