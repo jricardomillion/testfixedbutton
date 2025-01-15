@@ -27,31 +27,34 @@
         }
 
         .toolbar {
-            position: absolute; /* Cambiado a absolute */
+            position: fixed;
+            bottom: 0;
             left: 0;
-            top: 0; /* Iniciamos desde top */
             width: 100%;
-            height: 60px; /* Altura fija */
+            padding: 16px;
             background: white;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding: 16px;
-            transform: translateY(0);
+            z-index: 1000;
+            transform: translate3d(0,0,0);
             will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .toolbar button {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <div class="content">
-        <input type="text" placeholder="Nombre">
+        <input type="text" placeholder="Nombrea">
         <input type="email" placeholder="Email">
         <input type="tel" placeholder="Teléfono">
         <input type="number" placeholder="Número">
@@ -65,27 +68,30 @@
 
     <script>
         const toolbar = document.getElementById('toolbar');
-        const toolbarHeight = 60; // Altura fija del toolbar
 
-        function updatePosition() {
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-            const scrollY = window.scrollY;
-            
-            // Fórmula simplificada
-            const top = viewportHeight + scrollY - toolbarHeight;
-            
-            toolbar.style.transform = `translateY(${top}px)`;
+        function updateToolbarPosition() {
+            if (!window.visualViewport) return;
+
+            const viewportHeight = window.visualViewport.height;
+            const viewportOffsetTop = window.visualViewport.offsetTop;
+
+            // Si el teclado está abierto
+            if (viewportHeight < window.innerHeight) {
+                const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
+                toolbar.style.bottom = `${bottom}px`;
+            } else {
+                toolbar.style.bottom = '0';
+            }
         }
 
+        // Solo escuchamos el resize del viewport (para el teclado)
+        // y NO el scroll
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', updatePosition);
-            window.visualViewport.addEventListener('scroll', updatePosition);
+            window.visualViewport.addEventListener('resize', updateToolbarPosition);
         }
 
-        window.addEventListener('scroll', updatePosition);
-        
-        // Inicializar posición
-        updatePosition();
+        // Ejecutar inicialmente
+        updateToolbarPosition();
     </script>
 </body>
 </html>
