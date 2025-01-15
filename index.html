@@ -37,6 +37,8 @@
             z-index: 1000;
             transform: translate3d(0,0,0);
             will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .toolbar button {
@@ -52,7 +54,7 @@
 </head>
 <body>
     <div class="content">
-        <input type="text" placeholder="Nombre 2">
+        <input type="text" placeholder="Nombre">
         <input type="email" placeholder="Email">
         <input type="tel" placeholder="Teléfono">
         <input type="number" placeholder="Número">
@@ -65,35 +67,36 @@
     </div>
 
     <script>
-        let isKeyboardOpen = false;
-        let lastKeyboardHeight = 0;
+        let rafId = null;
+        let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
 
         function updateToolbarPosition() {
-            const toolbar = document.getElementById('toolbar');
-            if (!toolbar || !window.visualViewport) return;
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
 
-            const viewportHeight = window.visualViewport.height;
-            const windowHeight = window.innerHeight;
-            const keyboardHeight = windowHeight - viewportHeight;
+            rafId = requestAnimationFrame(() => {
+                const toolbar = document.getElementById('toolbar');
+                if (!toolbar || !window.visualViewport) return;
 
-            // Solo actualizar si la altura del teclado cambió significativamente
-            if (Math.abs(keyboardHeight - lastKeyboardHeight) > 1) {
-                if (viewportHeight < windowHeight) {
-                    const bottom = windowHeight - (window.visualViewport.offsetTop + viewportHeight);
+                const viewportHeight = window.visualViewport.height;
+                const viewportOffsetTop = window.visualViewport.offsetTop;
+
+                // Solo actualizamos si hay una diferencia significativa con la altura inicial
+                // esto evita actualizaciones durante cambios de input
+                if (Math.abs(viewportHeight - initialViewportHeight) > 50) {
+                    const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
                     toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-                    isKeyboardOpen = true;
                 } else {
                     toolbar.style.transform = 'translate3d(0, 0, 0)';
-                    isKeyboardOpen = false;
                 }
-                lastKeyboardHeight = keyboardHeight;
-            }
+            });
         }
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             if (window.visualViewport) {
+                // Solo escuchamos resize, que es cuando el teclado realmente cambia
                 window.visualViewport.addEventListener('resize', updateToolbarPosition);
-                window.visualViewport.addEventListener('scroll', updateToolbarPosition);
             }
         }
     </script>
