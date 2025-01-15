@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Keyboard Toolbar Test</title>
+    <title>Fixed Bottom Test</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -28,35 +27,31 @@
         }
 
         .toolbar {
-            position: fixed;
-            bottom: 0;
+            position: absolute; /* Cambiado a absolute */
             left: 0;
+            top: 0; /* Iniciamos desde top */
             width: 100%;
-            padding: 16px;
+            height: 60px; /* Altura fija */
             background: white;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            transform: translate3d(0,0,0);
+            padding: 16px;
+            transform: translateY(0);
             will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
         }
 
         .toolbar button {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
-            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <div class="content">
-        <h2>Test Form</h2>
-        <input type="text" placeholder="Nombre..">
+        <input type="text" placeholder="Nombre">
         <input type="email" placeholder="Email">
         <input type="tel" placeholder="Teléfono">
         <input type="number" placeholder="Número">
@@ -64,43 +59,33 @@
         <input type="text" placeholder="Campo extra 2">
     </div>
 
-    <div class="toolbar" id="toolbar">
+    <div id="toolbar" class="toolbar">
         <button>Continuar</button>
     </div>
 
     <script>
-        let isKeyboardOpen = false;
-        let rafId = null;
+        const toolbar = document.getElementById('toolbar');
+        const toolbarHeight = 60; // Altura fija del toolbar
 
-        function updateToolbarPosition() {
-            if (rafId) {
-                cancelAnimationFrame(rafId);
-            }
-
-            rafId = requestAnimationFrame(() => {
-                const toolbar = document.getElementById('toolbar');
-                if (!toolbar || !window.visualViewport) return;
-
-                const viewportHeight = window.visualViewport.height;
-                const viewportOffsetTop = window.visualViewport.offsetTop;
-
-                if (viewportHeight < window.innerHeight) {
-                    const bottom = window.innerHeight - (viewportOffsetTop + viewportHeight);
-                    toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-                    isKeyboardOpen = true;
-                } else {
-                    toolbar.style.transform = 'translate3d(0, 0, 0)';
-                    isKeyboardOpen = false;
-                }
-            });
+        function updatePosition() {
+            const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+            const scrollY = window.scrollY;
+            
+            // Fórmula simplificada
+            const top = viewportHeight + scrollY - toolbarHeight;
+            
+            toolbar.style.transform = `translateY(${top}px)`;
         }
 
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', updateToolbarPosition);
-                window.visualViewport.addEventListener('scroll', updateToolbarPosition);
-            }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updatePosition);
+            window.visualViewport.addEventListener('scroll', updatePosition);
         }
+
+        window.addEventListener('scroll', updatePosition);
+        
+        // Inicializar posición
+        updatePosition();
     </script>
 </body>
 </html>
