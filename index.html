@@ -21,7 +21,7 @@
       position: fixed;
       left: 0;
       right: 0;
-      bottom: 0;
+      top: calc(100dvh - 3rem);
       height: 50px;
       background: #3f51b5;
       color: #fff;
@@ -42,29 +42,6 @@
 
   <script>
     const footer = document.querySelector('.footer-fixed');
-    
-    function adjustFooter() {
-      if (!window.visualViewport) return;
-      const vv = window.visualViewport;
-      const footerHeight = footer.offsetHeight;
-      // Calcula la coordenada inferior visible (la parte inferior del visual viewport)
-      const visibleBottom = vv.offsetTop + vv.height;
-      
-      // Si visibleBottom es menor que window.innerHeight, asumimos que el teclado está abierto.
-      if (visibleBottom < window.innerHeight) {
-        // Reposiciona el footer para que quede justo encima del teclado:
-        // Usamos position absolute para situarlo respecto al documento
-        footer.style.position = 'absolute';
-        // Colocamos el footer en (visibleBottom - footerHeight)
-        footer.style.top = (visibleBottom - footerHeight) + 'px';
-        footer.style.bottom = 'auto';
-      } else {
-        // Cuando el teclado está cerrado, volvemos a position fixed al fondo.
-        footer.style.position = 'fixed';
-        footer.style.bottom = '0';
-        footer.style.top = 'auto';
-      }
-    }
     
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', adjustFooter);
