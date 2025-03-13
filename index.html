@@ -1,113 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Fixed Toolbar Test</title>
-    <style>
-        input {
-          font-size: 16px;
-          width: 100%;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixed Toolbar Test</title>
+<style>
+    input {
+      font-size: 16px;
+      width: 100%;
+    }
 
-.test {
-  position: fixed;
-  right: min(0rem, 100vw - env(keyboard-inset-width, 0rem));
-  bottom: max(0rem, env(keyboard-inset-height, 0rem));
-  width: max(100%, env(keyboard-inset-width, 0rem));
-  height: 4rem;
-  z-index: 1;
-  background-color: #3f51b5;
-}
+    .test {
+        position: fixed;
+        right: min(0rem, 100vw - env(keyboard-inset-width, 0rem));
+        bottom: max(0rem, env(keyboard-inset-height, 0rem));
+        width: max(100%, env(keyboard-inset-width, 0rem));
+        height: 4rem;
+        z-index: 1;
+        background-color: #3f51b5;
+    }
 
-body {
-  font-family: system-ui;
-  line-height: 1.45;
-  overscroll-behavior: contain;
-}
+    body {
+        font-family: system-ui;
+        line-height: 1.45;
+        overscroll-behavior: contain;
+    }
 
-* {
-  box-sizing: border-box;
-}
+    p.text {
+        height: 50rem;
+        background: tomato;
+    }
 
-    </style>
+    * {
+        box-sizing: border-box;
+    }
+
+</style>
 </head>
 <body>
     <header></header>
     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 700px; margin: auto; padding: 1rem;">
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p><input type="text"></p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nam placeat, architecto inventore id, eveniet nostrum, suscipit vero praesentium voluptas aliquid repellat at. Quae corporis eos placeat consequatur vero. Quasi, excepturi.</p>
+        <p><input type="text"></p>
+        <p class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
     </div>
 
     <div class="test"></div>
 
     <script>
-
         if ("virtualKeyboard" in navigator) {
-        navigator.virtualKeyboard.overlaysContent = true
+            navigator.virtualKeyboard.overlaysContent = true
         }
-
-        // let toolbar = document.getElementById('toolbar');
-
-        // // Detectar soporte de virtualKeyboard
-        // const supportsVirtualKeyboard = "virtualKeyboard" in navigator;
-
-        // function updateToolbarPosition() {
-        //     if (!toolbar || !window.visualViewport) return;
-
-        //     const viewportHeight = window.visualViewport.height;
-        //     const viewportOffsetTop = window.visualViewport.offsetTop;
-
-        //     // Detectar si el teclado está abierto usando visualViewport
-        //     const keyboardIsOpen = viewportHeight < window.innerHeight;
-
-        //     if (keyboardIsOpen) {
-        //         // Ajustar el toolbar cuando el teclado está abierto
-        //         const bottom = Math.max(0, window.innerHeight - (viewportOffsetTop + viewportHeight));
-        //         toolbar.style.transform = `translate3d(0, -${bottom}px, 0)`;
-        //     } else {
-        //         // Restaurar la posición del toolbar
-        //         toolbar.style.transform = 'translate3d(0, 0, 0)';
-        //     }
-        // }
-
-        // function enableVirtualKeyboardOverlay() {
-        //     // Habilitar overlay para el teclado virtual si es compatible
-        //     if (supportsVirtualKeyboard) {
-        //         navigator.virtualKeyboard.overlaysContent = true;
-        //     }
-        // }
-
-        // // Detectar eventos de resize para actualizar la posición del toolbar
-        // if (window.visualViewport) {
-        //     window.visualViewport.addEventListener('resize', updateToolbarPosition);
-        // }
-
-        // // Habilitar el overlay del teclado virtual al cargar la página
-        // enableVirtualKeyboardOverlay();
-
-        // // Manejar cambios de foco en inputs para estabilizar el comportamiento
-        // document.addEventListener('focusin', updateToolbarPosition);
-
-        // // Limpieza de eventos
-        // window.addEventListener('beforeunload', () => {
-        //     if (window.visualViewport) {
-        //         window.visualViewport.removeEventListener('resize', updateToolbarPosition);
-        //     }
-        //     document.removeEventListener('focusin', updateToolbarPosition);
-        // });
-
     </script>
 </body>
 </html>
