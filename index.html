@@ -1,99 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Fixed Toolbar Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Sticky Footer iOS Workaround</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      font-family: system-ui;
-      line-height: 1.45;
-      overscroll-behavior: contain;
+    /* 1) Eliminar márgenes y forzar que body ocupe toda la pantalla */
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
+      /* Evita que el body se desplace, así el footer realmente permanece fijo */
+      overflow: hidden; 
     }
-    .content {
-      display: flex; 
-      flex-direction: column; 
-      gap: 1rem; 
-      max-width: 700px; 
-      margin: auto; 
-      padding: 1rem;
-    }
-    input {
-      font-size: 16px;
+
+    /* 2) Contenedor principal */
+    .app-container {
+      position: relative;
       width: 100%;
+      height: 100%;
     }
-    .text {
-      height: 50rem;
-      background: tomato;
+
+    /* 3) Contenedor scrollable (el usuario hará scroll aquí) */
+    .scrollable-content {
+      /* Ocupa todo el alto menos la altura del footer (4rem en este ejemplo) */
+      height: calc(100% - 4rem);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+      background: #f5f5f5;
     }
-    .test {
-      position: fixed;
+
+    /* 4) Footer fijo, anclado al fondo del contenedor principal */
+    .footer-fixed {
+      position: absolute; 
       left: 0;
       right: 0;
       bottom: 0;
       height: 4rem;
-      z-index: 999;
-      background-color: #3f51b5;
-      /* Para ver el ajuste suave */
-      transition: transform 0.2s ease;
+      background: #3f51b5;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999; /* Para que quede por encima del contenido */
+    }
+
+    /* Estilos de ejemplo para el contenido */
+    .content {
+      padding: 1rem;
+    }
+    .content input {
+      width: 100%;
+      font-size: 16px;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+    }
+    .spacer {
+      height: 2000px; /* Simula mucho contenido */
+      background: tomato;
     }
   </style>
 </head>
 <body>
-  <header></header>
-  <div class="content">
-      <p><input type="text" placeholder="Toca aquí para abrir el teclado"></p>
-      <p class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+  <div class="app-container">
+    <!-- Contenido que sí se puede desplazar -->
+    <div class="scrollable-content">
+      <div class="content">
+        <input type="text" placeholder="Toca aquí para abrir el teclado" />
+        <div class="spacer">Contenido extenso para scroll</div>
+      </div>
+    </div>
+
+    <!-- Footer fijo al fondo -->
+    <div class="footer-fixed">
+      Footer fijo
+    </div>
   </div>
-
-  <div class="test"></div>
-
-  <script>
-    // En Chrome/Android, habilita la API si está disponible
-    if ("virtualKeyboard" in navigator) {
-      navigator.virtualKeyboard.overlaysContent = true;
-    }
-
-    // Para iOS Safari/Firefox, usar VisualViewport para compensar el scroll/zoom
-    const testEl = document.querySelector('.test');
-
-    function adjustLayout() {
-      if (!window.visualViewport) return;
-      const vv = window.visualViewport;
-
-      // Altura visible actual = vv.height
-      // El "fondo" del visual viewport = vv.offsetTop + vv.height
-      // El "fondo" del layout viewport = window.innerHeight
-
-      const bottomOfVv = vv.offsetTop + vv.height;         // Y absoluto del fondo de la parte visible
-      const bottomOfLayout = window.innerHeight;           // Y absoluto del fondo del layout
-
-      // Si bottomOfVv < bottomOfLayout => hay teclado u otra cosa "ocultando" parte de la pantalla
-      const occlusion = bottomOfLayout - bottomOfVv;
-
-      // Ajusta el elemento:
-      //  - Si hay occlusión (teclado abierto), se sube la barra
-      //  - Además, si el usuario hace scroll, offsetTop > 0
-      //    => la barra se “compensa” con transform para seguir “pegada” al fondo del VV
-      if (occlusion > 0) {
-        // Subimos la barra "occlusion" px
-        testEl.style.transform = `translateY(-${occlusion}px)`;
-      } else {
-        // Sin teclado o sin recorte
-        testEl.style.transform = '';
-      }
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', adjustLayout);
-      window.visualViewport.addEventListener('scroll', adjustLayout);
-      adjustLayout(); // Llamada inicial
-    }
-  </script>
 </body>
 </html>
