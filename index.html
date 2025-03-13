@@ -1,55 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fixed Toolbar Test</title>
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fixed Toolbar Test</title>
+  <style>
     input {
       font-size: 16px;
       width: 100%;
     }
 
     .test {
-        position: fixed;
-        right: min(0rem, 100vw - env(keyboard-inset-width, 0rem));
-        bottom: max(0rem, env(keyboard-inset-height, 0rem));
-        width: max(100%, env(keyboard-inset-width, 0rem));
-        height: 4rem;
-        z-index: 1;
-        background-color: #3f51b5;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0; /* Valor inicial, se actualizará con JS */
+      height: 4rem;
+      z-index: 1;
+      background-color: #3f51b5;
+      transition: bottom 0.3s ease; /* Transición suave al ajustar */
     }
 
     body {
-        font-family: system-ui;
-        line-height: 1.45;
-        overscroll-behavior: contain;
+      font-family: system-ui;
+      line-height: 1.45;
+      overscroll-behavior: contain;
     }
 
     p.text {
-        height: 50rem;
-        background: tomato;
+      height: 50rem;
+      background: tomato;
     }
 
     * {
-        box-sizing: border-box;
+      box-sizing: border-box;
     }
-
-</style>
+  </style>
 </head>
 <body>
-    <header></header>
-    <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 700px; margin: auto; padding: 1rem;">
-        <p><input type="text"></p>
-        <p class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-    </div>
+  <header></header>
+  <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 700px; margin: auto; padding: 1rem;">
+      <p><input type="text" placeholder="Toca para activar el teclado"></p>
+      <p class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+  </div>
 
-    <div class="test"></div>
+  <div class="test"></div>
 
-    <script>
-        if ("virtualKeyboard" in navigator) {
-            navigator.virtualKeyboard.overlaysContent = true
-        }
-    </script>
+  <script>
+    // Guarda la altura inicial del viewport visual
+    const initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+    function updateTestElementPosition() {
+      // Obtiene la altura actual del viewport visual o de la ventana
+      const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      // Calcula la diferencia, que aproximará la altura del teclado
+      const keyboardHeight = initialViewportHeight - currentHeight;
+      // Actualiza el estilo del elemento .test para que se eleve
+      document.querySelector(".test").style.bottom = keyboardHeight > 0 ? keyboardHeight + "px" : "0px";
+    }
+
+    // Si la API visualViewport está disponible, se escucha el evento 'resize'
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateTestElementPosition);
+    } else {
+      // Fallback al evento resize de window si no está disponible
+      window.addEventListener("resize", updateTestElementPosition);
+    }
+
+    // Para dispositivos que sí soporten la API virtualKeyboard (como chrome/android)
+    if ("virtualKeyboard" in navigator) {
+      navigator.virtualKeyboard.overlaysContent = true;
+    }
+  </script>
 </body>
 </html>
