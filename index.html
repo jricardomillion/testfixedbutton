@@ -2,79 +2,76 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sticky Footer iOS Workaround</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Footer Visible sobre el Teclado en iOS</title>
   <style>
-    /* 1) Eliminar márgenes y forzar que body ocupe toda la pantalla */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      /* Evita que el body se desplace, así el footer realmente permanece fijo */
-      overflow: hidden; 
+      /* Permitimos el scroll normal */
+      overflow: auto;
     }
-
-    /* 2) Contenedor principal */
-    .app-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* 3) Contenedor scrollable (el usuario hará scroll aquí) */
-    .scrollable-content {
-      /* Ocupa todo el alto menos la altura del footer (4rem en este ejemplo) */
-      height: calc(100% - 4rem);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+    .content {
+      padding: 1rem;
+      min-height: 150vh; /* contenido extenso para poder hacer scroll */
       background: #f5f5f5;
     }
-
-    /* 4) Footer fijo, anclado al fondo del contenedor principal */
     .footer-fixed {
-      position: absolute; 
+      position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 4rem;
+      height: 50px;
       background: #3f51b5;
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 999; /* Para que quede por encima del contenido */
-    }
-
-    /* Estilos de ejemplo para el contenido */
-    .content {
-      padding: 1rem;
-    }
-    .content input {
-      width: 100%;
-      font-size: 16px;
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-    }
-    .spacer {
-      height: 2000px; /* Simula mucho contenido */
-      background: tomato;
+      z-index: 1000;
+      transition: top 0.2s ease, bottom 0.2s ease;
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Contenido que sí se puede desplazar -->
-    <div class="scrollable-content">
-      <div class="content">
-        <input type="text" placeholder="Toca aquí para abrir el teclado" />
-        <div class="spacer">Contenido extenso para scroll</div>
-      </div>
-    </div>
-
-    <!-- Footer fijo al fondo -->
-    <div class="footer-fixed">
-      Footer fijo
-    </div>
+  <div class="content">
+    <input type="text" placeholder="Toca aquí para abrir el teclado" style="width:100%; padding:0.5rem; margin-bottom:1rem;">
+    <p>Contenido extenso para scroll...</p>
   </div>
+  <div class="footer-fixed">Footer Fijo</div>
+
+  <script>
+    const footer = document.querySelector('.footer-fixed');
+    
+    function adjustFooter() {
+      if (!window.visualViewport) return;
+      const vv = window.visualViewport;
+      const footerHeight = footer.offsetHeight;
+      // Calcula la coordenada inferior visible (la parte inferior del visual viewport)
+      const visibleBottom = vv.offsetTop + vv.height;
+      
+      // Si visibleBottom es menor que window.innerHeight, asumimos que el teclado está abierto.
+      if (visibleBottom < window.innerHeight) {
+        // Reposiciona el footer para que quede justo encima del teclado:
+        // Usamos position absolute para situarlo respecto al documento
+        footer.style.position = 'absolute';
+        // Colocamos el footer en (visibleBottom - footerHeight)
+        footer.style.top = (visibleBottom - footerHeight) + 'px';
+        footer.style.bottom = 'auto';
+      } else {
+        // Cuando el teclado está cerrado, volvemos a position fixed al fondo.
+        footer.style.position = 'fixed';
+        footer.style.bottom = '0';
+        footer.style.top = 'auto';
+      }
+    }
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', adjustFooter);
+      window.visualViewport.addEventListener('scroll', adjustFooter);
+    }
+    // Ajuste inicial
+    adjustFooter();
+  </script>
 </body>
 </html>
