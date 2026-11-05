@@ -21,7 +21,7 @@
       position: fixed;
       left: 0;
       right: 0;
-      top: calc(100dvh - 3rem);
+      bottom: 0;
       height: 50px;
       background: #3f51b5;
       color: #fff;
@@ -29,7 +29,6 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      transition: top 0.2s ease, bottom 0.2s ease;
     }
   </style>
 </head>
@@ -42,11 +41,22 @@
 
   <script>
     const footer = document.querySelector('.footer-fixed');
-    
+
+    function adjustFooter() {
+      const viewport = window.visualViewport;
+      const visibleBottom = viewport
+        ? viewport.height + viewport.offsetTop
+        : window.innerHeight;
+
+      footer.style.bottom = 'auto';
+      footer.style.top = `${visibleBottom - footer.offsetHeight}px`;
+    }
+
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', adjustFooter);
       window.visualViewport.addEventListener('scroll', adjustFooter);
     }
+    window.addEventListener('resize', adjustFooter);
     // Ajuste inicial
     adjustFooter();
   </script>
