@@ -151,12 +151,16 @@
     }
 
     input.addEventListener('beforeinput', (event) => {
+      if (!composing && !event.isComposing) beforeEdit = captureEdit();
       if (event.inputType.startsWith('insert')) limitInsertion(event, event.data);
     });
     input.addEventListener('paste', (event) => {
       if (event.clipboardData) limitInsertion(event, event.clipboardData.getData('text/plain'));
     });
-    input.addEventListener('compositionstart', () => { composing = true; });
+    input.addEventListener('compositionstart', () => {
+      beforeEdit = captureEdit();
+      composing = true;
+    });
     input.addEventListener('compositionend', () => {
       composing = false;
       updatePreview();
