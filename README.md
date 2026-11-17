@@ -18,6 +18,22 @@ No hay infraestructura de tests automatizados. Ejecutar estas comprobaciones en 
 2. **Límites:** pegar `1234567890` siete veces y después `123456789`: debe indicar `79/80`. Escribir `0`: `80/80`, todavía sin error. Intentar escribir `X`: el valor no cambia, el contador pasa a rojo y aparece `!`. Repetir el intento: no debe repetirse el anuncio accesible. Borrar un carácter: `79/80`, sin rojo ni aviso. Volver a llenar e intentar excederlo debe anunciar de nuevo el límite.
 3. **Pegado y selección:** en vacío, pegar nueve copias de `1234567890`: solo se aceptan ocho (`80/80`, estado de límite). Con ese valor, seleccionar los primeros diez caracteres y pegar `ABCDEFGHIJKL`: se aceptan `ABCDEFGHIJ` y se conservan los otros 70 caracteres. Reemplazar la selección por menos caracteres y comprobar que se elimina el estado de límite. En `79/80`, intentar insertar dos letras en medio: se acepta una y se conserva el resto del texto.
 4. **Unicode e IME:** pegar 80 copias de `😀`: `80/80`, sin cortar ningún emoji; intentar otro activa el límite. Cada emoji simple cuenta como un carácter; los grafemas compuestos pueden contar como varios puntos de código. Con un teclado japonés o chino, componer y confirmar texto tanto por debajo del máximo como junto al límite: no se debe interrumpir la composición; al confirmarla quedan como máximo 80 puntos de código. Borrar y volver a componer también debe funcionar.
+   - **Regresión de sufijo (IME):** preparar valores de 79 y 80 caracteres (`'A'.repeat(n - 1) + 'B'`). Para cada valor, componer `字語文界` al principio (posición 0), en medio (posición 39) y reemplazando selecciones de dos caracteres (rangos 0–2 y 39–41). No se debe recortar ni interrumpir la composición activa. Al confirmar, conservar exactamente el prefijo y el sufijo anteriores fuera de la selección; aceptar solo los primeros `80 - (n - longitudDeSelección)` puntos de código insertados. Deben quedar `80/80` y el aviso de exceso. En particular, confirmar solo `字` delante de 79 `A` y una `B` debe dejar el valor original intacto, incluida la `B`, y activar el aviso. Repetir con emoji y borrar después para comprobar la recuperación.
+   - **Regresión no cancelable:** repetir la misma matriz sin IME usando el siguiente ayudante en la consola, tras preparar el valor y la selección en el campo. Ejecutar `insertarNoCancelable('字語文界')`: debe conservar el mismo prefijo/sufijo y limitar únicamente lo insertado, con `80/80` y aviso. Repetir el ejemplo de 80 caracteres con `insertarNoCancelable('字')`: no debe cambiar ningún carácter. Esta simulación comprueba la salvaguarda, no sustituye las pruebas con un teclado IME real.
+
+     ```js
+     function insertarNoCancelable(texto) {
+       const campo = document.getElementById('message');
+       campo.dispatchEvent(new InputEvent('beforeinput', {
+         inputType: 'insertText', data: texto, bubbles: true, cancelable: false
+       }));
+       campo.setRangeText(texto, campo.selectionStart, campo.selectionEnd, 'end');
+       campo.dispatchEvent(new InputEvent('input', {
+         inputType: 'insertText', data: texto, bubbles: true
+       }));
+     }
+     ```
+
 5. **Texto literal:** pegar `<img src=x onerror=alert(1)>`: debe verse literalmente en el footer, sin crear imágenes, ejecutar código ni abrir alertas.
 6. **Layout:** a 320 px de ancho, pegar 80 letras `W` e intentar añadir otra. La vista previa ocupa una línea y termina con puntos suspensivos; el contador y `!` siguen visibles. El footer mide 50 px, no crece ni provoca scroll horizontal. Comprobar también texto con espacios y texto de derecha a izquierda, y aumentar el tamaño de texto del sistema.
 7. **Accesibilidad:** con VoiceOver/Safari (y, si está disponible, NVDA), enfocar el input: se anuncia su etiqueta y ayuda del máximo. Navegar al footer: el texto aceptado completo debe estar disponible aunque esté truncado visualmente; el contador debe leerse como «n de 80 caracteres». La vista previa no debe anunciarse con cada pulsación. Intentar exceder 80: un único aviso cortés de límite alcanzado por cada entrada en ese estado; el estado también se distingue por `!`, no solo por color.
