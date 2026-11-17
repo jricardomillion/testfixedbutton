@@ -134,6 +134,7 @@
         limitStatus.textContent = nextLimited ? 'Límite de 80 caracteres alcanzado. Borra texto para seguir escribiendo.' : '';
       }
       limited = nextLimited;
+      beforeEdit = captureEdit();
     }
 
     function limitInsertion(event, text) {
