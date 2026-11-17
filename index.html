@@ -96,14 +96,32 @@
     const limit = 80;
     let composing = false;
     let limited = false;
+    let beforeEdit = captureEdit();
+
+    function captureEdit() {
+      return { value: input.value, start: input.selectionStart, end: input.selectionEnd };
+    }
 
     function updatePreview(exceeded = false) {
       const characters = Array.from(input.value);
       const overflow = characters.length > limit;
       if (overflow) {
-        const caret = input.selectionStart;
-        input.value = characters.slice(0, limit).join('');
-        input.setSelectionRange(Math.min(caret, input.value.length), Math.min(caret, input.value.length));
+        const previous = Array.from(beforeEdit.value);
+        const rangeStart = Array.from(beforeEdit.value.slice(0, beforeEdit.start)).length;
+        const rangeSuffix = Array.from(beforeEdit.value.slice(beforeEdit.end)).length;
+        let start = 0;
+        let suffix = 0;
+        // La selección previa evita confundir texto insertado con un sufijo repetido.
+        while (start < rangeStart && previous[start] === characters[start]) start++;
+        while (suffix < rangeSuffix && suffix < characters.length - start &&
+               previous[previous.length - 1 - suffix] === characters[characters.length - 1 - suffix]) suffix++;
+        const available = Math.max(0, limit - start - suffix);
+        const inserted = characters.slice(start, characters.length - suffix).slice(0, available).join('');
+        const prefix = previous.slice(0, start).join('');
+        const tail = previous.slice(previous.length - suffix).join('');
+        input.value = prefix + inserted + tail;
+        const caret = prefix.length + inserted.length;
+        input.setSelectionRange(caret, caret);
       }
       const count = Math.min(characters.length, limit);
       const nextLimited = exceeded || overflow || (limited && count === limit);
