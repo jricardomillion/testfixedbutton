@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -7,6 +7,7 @@
   <style>
     :root {
       --footer-bg: #3f51b5;
+      --footer-limit-color: #ffcdd2;
     }
     html, body {
       margin: 0;
@@ -20,6 +21,19 @@
       min-height: 150vh; /* contenido extenso para poder hacer scroll */
       background: #f5f5f5;
     }
+    #message {
+      box-sizing: border-box;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
     .footer-fixed {
       position: fixed;
       left: 0;
@@ -32,18 +46,129 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      box-sizing: border-box;
+      padding: 0 1rem;
+      gap: 1rem;
+    }
+    .footer-preview {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .footer-counter {
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .footer-counter.limit-reached {
+      color: var(--footer-limit-color);
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div class="content">
-    <input type="text" placeholder="Toca aquí para abrir el teclado" style="width:100%; padding:0.5rem; margin-bottom:1rem;">
+    <label for="message" class="visually-hidden">Texto para la vista previa</label>
+    <p id="message-help" class="visually-hidden">Máximo 80 caracteres. La vista previa aparece en el footer.</p>
+    <input id="message" type="text" aria-describedby="message-help limit-status" placeholder="Toca aquí para abrir el teclado" style="width:100%; padding:0.5rem; margin-bottom:1rem;">
     <p>Contenido extenso para scroll...</p>
   </div>
-  <div class="footer-fixed">Footer Fijo</div>
+  <div class="footer-fixed">
+    <span id="footer-preview" class="footer-preview" dir="auto">Footer Fijo</span>
+    <span class="footer-counter">
+      <span id="footer-count" aria-hidden="true">0/80</span><span id="limit-marker" aria-hidden="true" hidden> !</span>
+      <span id="footer-count-description" class="visually-hidden">0 de 80 caracteres</span>
+    </span>
+  </div>
+  <p id="limit-status" class="visually-hidden" role="status"></p>
 
   <script>
     const footer = document.querySelector('.footer-fixed');
+    const input = document.getElementById('message');
+    const preview = document.getElementById('footer-preview');
+    const counter = document.querySelector('.footer-counter');
+    const countText = document.getElementById('footer-count');
+    const countDescription = document.getElementById('footer-count-description');
+    const limitMarker = document.getElementById('limit-marker');
+    const limitStatus = document.getElementById('limit-status');
+    const limit = 80;
+    let composing = false;
+    let limited = false;
+    let beforeEdit = captureEdit();
+
+    function captureEdit() {
+      return { value: input.value, start: input.selectionStart, end: input.selectionEnd };
+    }
+
+    function updatePreview(exceeded = false) {
+      const characters = Array.from(input.value);
+      const overflow = characters.length > limit;
+      if (overflow) {
+        const previous = Array.from(beforeEdit.value);
+        const rangeStart = Array.from(beforeEdit.value.slice(0, beforeEdit.start)).length;
+        const rangeSuffix = Array.from(beforeEdit.value.slice(beforeEdit.end)).length;
+        let start = 0;
+        let suffix = 0;
+        // La selección previa evita confundir texto insertado con un sufijo repetido.
+        while (start < rangeStart && previous[start] === characters[start]) start++;
+        while (suffix < rangeSuffix && suffix < characters.length - start &&
+               previous[previous.length - 1 - suffix] === characters[characters.length - 1 - suffix]) suffix++;
+        const available = Math.max(0, limit - start - suffix);
+        const inserted = characters.slice(start, characters.length - suffix).slice(0, available).join('');
+        const prefix = previous.slice(0, start).join('');
+        const tail = previous.slice(previous.length - suffix).join('');
+        input.value = prefix + inserted + tail;
+        const caret = prefix.length + inserted.length;
+        input.setSelectionRange(caret, caret);
+      }
+      const count = Math.min(characters.length, limit);
+      const nextLimited = exceeded || overflow || (limited && count === limit);
+      preview.textContent = input.value || 'Footer Fijo';
+      countText.textContent = `${count}/${limit}`;
+      countDescription.textContent = `${count} de ${limit} caracteres`;
+      counter.classList.toggle('limit-reached', nextLimited);
+      limitMarker.hidden = !nextLimited;
+      if (limited !== nextLimited) {
+        limitStatus.textContent = nextLimited ? 'Límite de 80 caracteres alcanzado. Borra texto para seguir escribiendo.' : '';
+      }
+      limited = nextLimited;
+      beforeEdit = captureEdit();
+    }
+
+    function limitInsertion(event, text) {
+      if (composing || event.isComposing || !event.cancelable || text === null) return;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const remaining = input.value.slice(0, start) + input.value.slice(end);
+      const available = Math.max(0, limit - Array.from(remaining).length);
+      const characters = Array.from(text.replace(/[\r\n]/g, ''));
+      if (characters.length <= available) return;
+      event.preventDefault();
+      input.setRangeText(characters.slice(0, available).join(''), start, end, 'end');
+      updatePreview(true);
+    }
+
+    input.addEventListener('beforeinput', (event) => {
+      if (!composing && !event.isComposing) beforeEdit = captureEdit();
+      if (event.inputType.startsWith('insert')) limitInsertion(event, event.data);
+    });
+    input.addEventListener('paste', (event) => {
+      if (event.clipboardData) limitInsertion(event, event.clipboardData.getData('text/plain'));
+    });
+    input.addEventListener('compositionstart', () => {
+      beforeEdit = captureEdit();
+      composing = true;
+    });
+    input.addEventListener('compositionend', () => {
+      composing = false;
+      updatePreview();
+    });
+    input.addEventListener('input', (event) => {
+      if (!composing && !event.isComposing) updatePreview();
+    });
+    updatePreview();
 
     function adjustFooter() {
       const viewport = window.visualViewport;
