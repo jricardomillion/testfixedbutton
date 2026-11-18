@@ -1,0 +1,20 @@
+# Test fixture for TechTeam's CI gate: a pull request that carries a simulated-run note whose name contains
+# "ci-fail" fails this check; everything else passes.
+name: CI
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check simulated-run notes
+        run: |
+          if ls agent-simulations 2>/dev/null | grep -q "ci-fail"; then
+            echo "Found a note marked ci-fail:"
+            ls agent-simulations | grep "ci-fail"
+            echo "::error file=agent-simulations::A simulated-run note marked ci-fail is on this branch (TechTeam CI gate test). Rename it without ci-fail to pass."
+            exit 1
+          fi
+          echo "No ci-fail notes. OK."
